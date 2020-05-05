@@ -19,8 +19,8 @@ namespace SocketProgramming
 {
     class Program
     {
-        static string ip = "127.0.0.1";
-        static Int32 port = 11000;
+        private const string ip = "127.0.0.1";
+        private const Int32 port = 11000;
         private const string INCREMENT_MSG = "increment";
         private const string EVALUATE_MSG = "evaluate";
         private const string CLOSE_MSG = "close";
@@ -82,8 +82,8 @@ namespace SocketProgramming
                             switch (receiveData.ToLower())
                             {
                                 case INCREMENT_MSG:
-                                    Increment();
-                                    msg = Encoding.ASCII.GetBytes("success");
+                                    string resultMsg = Increment();
+                                    msg = Encoding.ASCII.GetBytes(resultMsg);
                                     handler.Send(msg);
                                     break;
                                 case EVALUATE_MSG:
@@ -116,7 +116,6 @@ namespace SocketProgramming
         /// </summary>
         public static void StartClient()
         {
-            //Console.WriteLine("Client: Started");
             byte[] bytesToRead = new byte[1024];
             byte[] msgByte = new byte[1024];
             int bytesRead;
@@ -168,18 +167,28 @@ namespace SocketProgramming
         /// <summary>
         /// Increment value by 1
         /// </summary>
-        private static void Increment()
+        private static string Increment()
         {
-            int maxvalue = 0;
-            string strqry = "SELECT MAX(Value) FROM Count";
-            DataTable dtMax = DBConnectionManager.Instance.GetData(strqry);
-            if (dtMax != null && dtMax.Rows.Count > 0 && dtMax.Rows[0][0] != DBNull.Value)
+            string resultMessage = string.Empty;
+            try
             {
-                maxvalue = Convert.ToInt32(dtMax.Rows[0][0]) + 1;
-            }
+                int maxvalue = 0;
+                string strqry = "SELECT MAX(Value) FROM Count";
+                DataTable dtMax = DBConnectionManager.Instance.GetData(strqry);
+                if (dtMax != null && dtMax.Rows.Count > 0 && dtMax.Rows[0][0] != DBNull.Value)
+                {
+                    maxvalue = Convert.ToInt32(dtMax.Rows[0][0]) + 1;
+                }
 
-            strqry = string.Format("INSERT INTO Count(Value) VALUES ({0})", maxvalue);
-            DBConnectionManager.Instance.ExecuteQuery(strqry);
+                strqry = string.Format("INSERT INTO Count(Value) VALUES ({0})", maxvalue);
+                DBConnectionManager.Instance.ExecuteQuery(strqry);
+                resultMessage = "Success";
+            }
+            catch (Exception)
+            {
+                resultMessage = "Failed";
+            }
+            return resultMessage;
         }
 
         /// <summary>
@@ -198,5 +207,4 @@ namespace SocketProgramming
             return maxvalue;
         }
     }
-
 }
